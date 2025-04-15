@@ -13,12 +13,12 @@ const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: ['https://replit-clone-frontend.vercel.app', 'http://localhost:3000'],
+    origin: ['https://zhass-coding-frontend.vercel.app', 'http://localhost:3000'],
   },
 });
 
 app.use(cors({
-  origin: ['https://replit-clone-frontend.vercel.app', 'http://localhost:3000'],
+  origin: ['https://zhass-coding-frontend.vercel.app', 'http://localhost:3000'],
 }));
 app.use(bodyParser.json());
 
@@ -39,7 +39,7 @@ app.use(bodyParser.json());
 })();
 
 app.get('/', (req, res) => {
-  res.send('Hello from Replit Clone Backend!');
+  res.send('Hello from Zhass Coding Backend!');
 });
 
 app.get('/create-room', (req, res) => {
