@@ -33,7 +33,7 @@ function App() {
   const [userInput, setUserInput] = useState(""); // New state for user input
 
   useEffect(() => {
-    const newSocket = io('http://localhost:5000', {
+    const newSocket = io('https://zhass-coding-backend.onrender.com', {
       withCredentials: true
     });
     setSocket(newSocket);
@@ -55,7 +55,7 @@ function App() {
 
   const createRoom = async () => {
     try {
-      const response = await fetch('http://localhost:5000/create-room');
+      const response = await fetch('https://zhass-coding-backend.onrender.com/create-room');
       const data = await response.json();
       setRoomId(data.roomId);
       socket.emit('join-room', data.roomId);
@@ -96,7 +96,7 @@ function App() {
 
   const runCode = async () => {
     setOutput("Running...");
-    const backendUrl = "http://localhost:5000/run";
+    const backendUrl = "https://zhass-coding-backend.onrender.com/run";
     try {
       const response = await fetchWithTimeout(backendUrl, {
         method: 'POST',
@@ -142,7 +142,7 @@ function App() {
 
     setOutput("Running tests...");
     try {
-      const response = await fetchWithTimeout('http://localhost:5000/run-tests', {
+      const response = await fetchWithTimeout('https://zhass-coding-backend.onrender.com/run-tests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code, language }),
@@ -185,7 +185,7 @@ function App() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Replit Clone</h1>
+      <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>Zhass Coding</h1>
       
       <div style={{ 
         display: 'flex', 
