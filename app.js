@@ -6,6 +6,9 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
 const net = require('net');
+const axios = require('axios');
+
+require('dotenv').config();
 
 const app = express();
 const docker = new Docker();
@@ -45,6 +48,43 @@ app.get('/', (req, res) => {
 app.get('/create-room', (req, res) => {
   const roomId = uuidv4();
   res.json({ roomId });
+});
+
+app.post('/generate-code', async (req, res) => {
+  const { prompt, language = 'html' } = req.body;
+
+  if (!prompt || typeof prompt !== 'string') {
+    return res.status(400).json({ error: 'Prompt is required and must be a string' });
+  }
+
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
+      {
+        contents: [
+          {
+            parts: [
+              {
+                text: `Generate ${language} code for: ${prompt}`,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    const generatedCode = response.data.candidates[0].content.parts[0].text.trim();
+    res.json({ code: generatedCode });
+  } catch (error) {
+    console.error('Error generating code:', error.message);
+    res.status(500).json({ error: 'Failed to generate code: ' + error.message });
+  }
 });
 
 app.post('/run', async (req, res) => {
@@ -106,7 +146,7 @@ app.post('/run', async (req, res) => {
     console.log(`Creating container with image: ${image}`);
     container = await docker.createContainer({
       Image: image,
-      Cmd: ['tail', '-f', '/dev/null'], // Keep container alive for exec
+      Cmd: ['tail', '-f', '/dev/null'],
       HostConfig: {
         Binds: [`${path.join(__dirname, 'temp')}:/app`],
         AutoRemove: true,
@@ -140,7 +180,6 @@ app.post('/run', async (req, res) => {
       throw new Error(`Failed to start exec: ${err.message}`);
     });
 
-    // Write user input to exec stream
     if (input) {
       console.log("Writing input to exec stream...");
       stream.write(input + '\n');
@@ -203,7 +242,6 @@ app.post('/run-tests', async (req, res) => {
     return res.status(400).json({ output: 'Code is required and must be a string' });
   }
 
-  // Validate Python test code
   if (language === 'python') {
     const pythonTestKeywords = ['unittest.TestCase', 'self.assert'];
     const hasPythonTestSyntax = pythonTestKeywords.some(keyword => code.includes(keyword));
@@ -342,7 +380,6 @@ io.on('connection', (socket) => {
   });
 });
 
-// Check port availability
 async function checkPort(port) {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
@@ -358,7 +395,6 @@ async function checkPort(port) {
   });
 }
 
-// Start server
 const PORT = process.env.PORT || 5000;
 async function startServer() {
   try {
@@ -373,7 +409,6 @@ async function startServer() {
 }
 startServer();
 
-// Graceful shutdown
 process.on('SIGINT', () => {
   console.log('Shutting down server...');
   server.close(() => {
